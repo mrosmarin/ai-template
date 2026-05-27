@@ -1,0 +1,26 @@
+todo.md
+
+# Dependency directories
+node_modules/
+bower_components/
+vendor/
+
+# Build outputs
+dist/
+build/
+out/
+.next/
+.nuxt/
+
+# Logs and databases
+*.log
+*.sqlite
+*.db
+
+# Environment and secrets
+.env*
+.venv/
+env/
+venv/
+.python-version
+
