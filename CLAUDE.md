@@ -123,3 +123,11 @@ If a tangential idea, question, or TODO comes up while working on a task — som
 When asked to **check scratchpad** or **review scratchpad**, read `.devcontainer/SCRATCHPAD.md` and help triage: promote actionable items to Linear tickets, move decisions into the memory bank, and clear out anything already done.
 
 When asked to **start a review** or **review this work**, open the scratchpad's Review section and help the user walk through the checklist — log what's working, what's broken, and what they want changed. After the review, offer to batch-create Linear tickets from the "Not Working" and "Change Requests" items.
+
+---
+
+## Checkpoint
+
+Use `/checkpoint` (or say "checkpoint", "save state", "before refresh") to persist session state before a devcontainer refresh or end of session. The command runs the full pre-commit hygiene loop (memory bank → docs → Linear → commit) and guarantees a push so nothing is lost.
+
+Full procedure lives in `.claude/commands/checkpoint.md`.

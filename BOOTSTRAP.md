@@ -164,3 +164,4 @@ After bootstrap, the repo should have:
 | `memory-bank/` | Session memory (activeContext.md, progress.md, etc.) |
 | `.claude/rules/memory-bank.md` | Claude Code rule to load memory bank |
 | `.devcontainer/SCRATCHPAD.md` | Personal capture file for ideas, TODOs, and discussion points (gitignored) |
+| `.claude/commands/checkpoint.md` | Claude Code slash command — save session state before devcontainer refresh |
