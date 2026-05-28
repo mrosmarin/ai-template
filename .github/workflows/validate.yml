@@ -1,0 +1,76 @@
+name: Validate Template
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  shellcheck:
+    name: ShellCheck
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install shellcheck
+        run: sudo apt-get install -y shellcheck
+      - name: Lint shell scripts
+        run: |
+          find . -name '*.sh' -not -path './.beads/*' -not -path './node_modules/*' | while read f; do
+            echo "→ $f"
+            shellcheck -e SC1091 -e SC2034 "$f" || true
+          done
+
+  configure-dry-run:
+    name: Configure Script Validation
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify configure.sh is executable
+        run: test -x configure.sh
+      - name: Verify configure.sh has no syntax errors
+        run: bash -n configure.sh
+      - name: Verify all template files exist
+        run: |
+          files=(
+            CLAUDE.md CONTRIBUTING.md DEPLOYMENT-ENV.md WORKTREES.md
+            BOOTSTRAP.md Makefile README.md .worktreeinclude .gitignore
+            .devcontainer/postinstall.sh .devcontainer/devcontainer.json
+            .claude/rules/memory-bank.md .kilo/rules/memory-bank.md
+            scripts/worktree-new.sh scripts/claude-audit.sh
+          )
+          missing=0
+          for f in "${files[@]}"; do
+            if [[ ! -f "$f" ]]; then
+              echo "✗ MISSING: $f"
+              missing=1
+            else
+              echo "✓ $f"
+            fi
+          done
+          exit $missing
+      - name: Verify STACK markers are balanced
+        run: |
+          errors=0
+          for f in CLAUDE.md CONTRIBUTING.md Makefile .agents/skills/checkpoint/SKILL.md; do
+            [[ ! -f "$f" ]] && continue
+            opens=$(grep -c '<!-- STACK:' "$f" || true)
+            closes=$(grep -c '<!-- /STACK -->' "$f" || true)
+            if [[ "$opens" -ne "$closes" ]]; then
+              echo "✗ $f: $opens opens vs $closes closes"
+              errors=1
+            else
+              echo "✓ $f: $opens balanced markers"
+            fi
+          done
+          exit $errors
+      - name: Verify no leaked personal data
+        run: |
+          if grep -rn 'nobodymove\|relo-apps\|mrosmarin@\|SUPABASE_.*=sb_' \
+               --include='*.md' --include='*.sh' --include='Makefile' \
+               --exclude-dir='.git' .; then
+            echo "✗ Found potential personal data"
+            exit 1
+          else
+            echo "✓ No personal data found"
+          fi
