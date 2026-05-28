@@ -1,133 +1,120 @@
 # AI Template — Starter Dev Kit for AI-Assisted Projects
 
-An opinionated devcontainer template for building software with AI coding agents (Claude Code, Kilo Code, etc.). Includes pre-configured tooling, memory systems, task tracking, and workflow docs that get hydrated to your specific project during an interactive bootstrap.
-
-## What's in the box
-
-| Category | What you get |
-|---|---|
-| **Devcontainer** | VS Code + Docker-in-Docker, system tools pre-installed, Claude Code settings |
-| **Memory** | Memory bank (markdown) and/or Beads (Dolt-powered agent memory) — you choose |
-| **Task tracking** | Linear and/or Beads — you choose |
-| **Workflow docs** | CLAUDE.md, CONTRIBUTING.md, DEPLOYMENT-ENV.md, WORKTREES.md — all templated |
-| **Git workflow** | Feature branching, worktree helpers, conventional commits, PR templates |
-| **Scripts** | Worktree creation, Claude Code permission audit, Makefile with common targets |
-| **Personal tools** | Scratchpad for ideas/TODOs/reviews, checkpoint command to save session state |
+An opinionated devcontainer template for building software with AI coding agents (Claude Code, Kilo Code). Pre-configured tooling, memory systems, task tracking, and workflow docs — all templatized and hydrated to your project in two steps.
 
 ## Quick start
 
-### 1. Create your project from this template
-
-**Option A — GitHub template** (recommended):
-
-Click **"Use this template"** → **"Create a new repository"** on GitHub. Then clone your new repo and open in VS Code.
-
-**Option B — Clone into an existing project:**
-
 ```bash
-# From your project root
-git clone https://github.com/mrosmarin/ai-template.git .ai-template-tmp
-cp -r .ai-template-tmp/{.devcontainer,.claude,.agents,.kilo,scripts,memory-bank,BOOTSTRAP.md,CLAUDE.md,CONTRIBUTING.md,DEPLOYMENT-ENV.md,WORKTREES.md,Makefile,.worktreeinclude,.claudeignore,.kilocodeignore,.gitignore} .
-rm -rf .ai-template-tmp
+# 1. Clone the template into your project
+git clone https://github.com/mrosmarin/ai-template.git my-project
+cd my-project
+
+# 2. Configure (asks project name, stack, prefix, branches — takes 30 seconds)
+./configure.sh
+
+# 3. Open in VS Code → devcontainer builds automatically
+#    All tools installed: Claude Code, Beads, bv, gh, jq, Go, Node, Python, Docker-in-Docker
+
+# 4. Set up SSH for GitHub (keys generated in-container, not mounted from host)
+make ssh-setup
+
+# 5. Open Claude Code and say:
+#    "Run the bootstrap process in BOOTSTRAP.md"
+#    (asks about tech stack, CI, environment — finishes hydrating the docs)
 ```
 
-### 2. Open in devcontainer
+## What happens at each step
 
-Open the project in VS Code. It will prompt to **"Reopen in Container"** — say yes. The devcontainer builds and `.devcontainer/postinstall.sh` installs all system tools automatically (Claude Code, Beads, bv, gh, jq, etc.).
-
-### 3. Run the bootstrap
-
-Open Claude Code and say:
-
-> **Run the bootstrap process in BOOTSTRAP.md**
-
-Claude Code will ask you questions about your project — name, stack choice, Linear workspace, branching model, tech stack, etc. — then hydrate all the template docs with your answers and delete `BOOTSTRAP.md`.
+| Step | What runs | What it does |
+|---|---|---|
+| `configure.sh` | Bash (no deps needed) | Asks name/stack/prefix/branches, rewrites devcontainer.json, strips stack sections, replaces placeholders, resets git |
+| Devcontainer build | `.devcontainer/postinstall.sh` | Installs system tools (Claude Code, Beads, bv, gh, Go, Node, etc.), writes Claude Code global settings |
+| `make ssh-setup` | `.devcontainer/ssh-setup.sh` | Generates SSH key in container, prints instructions to add to GitHub |
+| Bootstrap (Claude Code) | `BOOTSTRAP.md` | Asks tech stack/CI/env details, wires Makefile, populates memory bank, inits Beads, writes README, deletes itself |
 
 ## Stack options
 
-The first bootstrap question is which **memory + tracking stack** you want:
+`configure.sh` asks which **memory + tracking stack** you want:
 
-| Stack | Memory Layer | Task Tracking | Stakeholder View | Best for |
+| # | Stack | Memory Layer | Task Tracking | Stakeholder View |
 |---|---|---|---|---|
-| **all** | memory-bank + `bd remember` | Beads + Linear | Linear + `bv` | Full setup, team with PM |
-| **bank-linear** | memory-bank | Linear | Linear | Teams already using Linear |
-| **beads-linear** | `bd remember` / `bd prime` | Beads + Linear | Linear + `bv` | Agent-first + stakeholder PM |
-| **beads-memory** | memory-bank | Beads | `bv` exports | Solo dev, no cloud PM |
-| **beads** | `bd remember` / `bd prime` | Beads | `bv` exports | Minimal, all-local |
+| 1 | **all** | memory-bank + `bd remember` | Beads + Linear | Linear + `bv` |
+| 2 | **bank-linear** | memory-bank | Linear | Linear |
+| 3 | **beads-linear** | `bd remember` / `bd prime` | Beads + Linear | Linear + `bv` |
+| 4 | **beads-memory** | memory-bank | Beads | `bv` exports |
+| 5 | **beads** | `bd remember` / `bd prime` | Beads | `bv` exports |
 
-You can always change later by re-running the relevant setup commands.
-
-## What each tool does
-
-**Claude Code** — AI coding agent that reads CLAUDE.md for project instructions and follows your workflow.
-
-**Memory bank** (`memory-bank/*.md`) — flat markdown files that Claude Code reads at session start. Simple, git-tracked, human-readable. Survives devcontainer rebuilds via git.
-
-**Beads** (`bd`) — Dolt-powered issue tracker designed for AI agents. Dependency graphs, `bd ready` for unblocked work, `bd remember` for persistent memory, `bd prime` to inject context. [Docs →](https://gastownhall.github.io/beads/)
-
-**Beads Viewer** (`bv`) — TUI and HTML export for Beads. Kanban boards, PageRank analysis, critical path visualization, stakeholder reports. [Docs →](https://github.com/Dicklesworthstone/beads_viewer)
-
-**Linear** — cloud PM tool for stakeholders. Ticket IDs go in branch names. Claude Code posts comments on tickets during checkpoints.
-
-## Project structure (after bootstrap)
+## What's included
 
 ```
 your-project/
 ├── .devcontainer/
-│   ├── devcontainer.json          ← VS Code devcontainer config
-│   ├── postinstall.sh             ← system tool installs (runs at build)
-│   ├── .env                       ← devcontainer secrets (gitignored)
-│   └── SCRATCHPAD.md              ← personal capture file (gitignored)
+│   ├── devcontainer.json        ← rewritten by configure.sh (project name, no host SSH)
+│   ├── docker-compose.yml       ← container services
+│   ├── postinstall.sh           ← system tool installs (runs at container build)
+│   ├── ssh-setup.sh             ← generates SSH keys in-container
+│   ├── .bashrc / .zshrc         ← shell config
+│   ├── .env                     ← devcontainer secrets (gitignored)
+│   └── SCRATCHPAD.md            ← personal ideas/TODOs/review checklist (gitignored)
+├── .agents/skills/
+│   └── checkpoint/              ← checkpoint skill (symlinked to .claude + .kilo)
 ├── .claude/
-│   ├── commands/
-│   │   └── checkpoint.md          ← /checkpoint slash command
-│   ├── rules/
-│   │   └── memory-bank.md         ← rule to read memory bank at session start
-│   ├── settings.json              ← project-level Claude Code permissions
-│   └── worktrees/                 ← worktree working dirs (gitignored)
-├── .agents/skills/                ← pinned agent skills
-├── memory-bank/                   ← session memory (if stack includes it)
-│   ├── activeContext.md
-│   ├── progress.md
-│   └── ...
+│   ├── rules/memory-bank.md     ← read memory bank at session start
+│   ├── settings.json            ← project-level permissions
+│   └── skills/ → .agents/skills ← symlink
+├── .kilo/
+│   ├── kilo.jsonc               ← Kilo Code MCP config
+│   └── skills/ → .agents/skills ← symlink
+├── memory-bank/                 ← session memory (stacks that include it)
 ├── scripts/
-│   ├── worktree-new.sh            ← create feature-branch worktrees
-│   └── claude-audit.sh            ← audit Claude Code permissions
-├── .worktreeinclude               ← gitignored files to copy into worktrees
-├── CLAUDE.md                      ← Claude Code session instructions
-├── CONTRIBUTING.md                ← branching, commits, PR process
-├── DEPLOYMENT-ENV.md              ← environments, secrets, deploy pipeline
-├── WORKTREES.md                   ← parallel worktree workflow
-├── Makefile                       ← day-to-day commands
-└── README.md                      ← project overview (this becomes yours)
+│   ├── worktree-new.sh          ← create feature-branch worktrees
+│   └── claude-audit.sh          ← audit Claude Code permissions
+├── .worktreeinclude             ← gitignored files to copy into worktrees
+├── configure.sh                 ← run once after cloning (then delete)
+├── BOOTSTRAP.md                 ← Claude Code deep hydration (then delete)
+├── CLAUDE.md                    ← Claude Code session instructions
+├── CONTRIBUTING.md              ← branching, commits, PR process
+├── DEPLOYMENT-ENV.md            ← environments, secrets, deploy pipeline
+├── WORKTREES.md                 ← parallel worktree workflow
+└── Makefile                     ← day-to-day commands
 ```
 
 ## Day-to-day usage
 
 ```bash
-make help                  # see all available commands
+make help                  # see all commands
 make up                    # start local services + dev server
 make ci                    # reproduce CI locally
-make worktree-new TICKET=123 SLUG=my-feature   # parallel worktree
+make worktree-new TICKET=123 SLUG=my-feature
 make claude-audit          # audit Claude Code permissions
+make ssh-setup             # generate/show SSH key
 ```
 
-**With Beads:**
+**With Beads (stacks that include it):**
 ```bash
 make bd-ready              # unblocked tasks
 make bd-prime              # load agent context
-make bv-triage             # AI-optimized task recommendations
+make bv-triage             # AI-optimized recommendations
 make bv-export             # HTML graph for stakeholders
 ```
 
-**Session management:**
-- Say `/checkpoint` in Claude Code to save state before a devcontainer refresh
-- Say "check scratchpad" to triage captured ideas/TODOs into tickets
-- Say "start a review" to walk through the review checklist in your scratchpad
+**Session management in Claude Code:**
+- `/checkpoint` — save state before devcontainer refresh
+- "check scratchpad" — triage captured ideas into tickets
+- "start a review" — walk the review checklist
 
-## Contributing
+## Tools installed by the devcontainer
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) for the full workflow.
+| Tool | Purpose |
+|---|---|
+| [Claude Code](https://claude.ai) | AI coding agent |
+| [Beads (bd)](https://github.com/gastownhall/beads) | Agent-native issue tracker |
+| [Beads Viewer (bv)](https://github.com/Dicklesworthstone/beads_viewer) | TUI + graph visualization |
+| [gh](https://cli.github.com) | GitHub CLI |
+| [commitizen-go](https://github.com/lintingzhen/commitizen-go) | Conventional commits |
+| Go, Node.js, Python, TypeScript | Language runtimes |
+| Docker-in-Docker | Container builds inside the devcontainer |
+| jq, uv | Utilities |
 
 ## License
 

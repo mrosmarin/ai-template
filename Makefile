@@ -4,6 +4,7 @@
 #   make help               # list everything
 #   make up                 # start local services + dev server
 #   make ci                 # reproduce CI locally
+#   make ssh-setup          # generate SSH key in container
 
 SHELL := /bin/bash
 
@@ -192,6 +193,12 @@ bv-export: ## Export interactive HTML graph for stakeholders
 	bv --export-graph report-$$(date +%Y%m%d).html
 	@echo "→ Exported to report-$$(date +%Y%m%d).html"
 # <!-- /STACK -->
+
+# ─── SSH ──────────────────────────────────────────────────────────────
+
+.PHONY: ssh-setup
+ssh-setup: ## Generate SSH key in container and print GitHub instructions
+	bash .devcontainer/ssh-setup.sh
 
 # ─── Claude Code ─────────────────────────────────────────────────────
 
