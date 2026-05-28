@@ -1,15 +1,7 @@
 # Makefile — <PROJECT_NAME>
-#
-# Quick reference:
-#   make help               # list everything
-#   make up                 # start local services + dev server
-#   make ci                 # reproduce CI locally
-#   make ssh-setup          # generate SSH key in container
 
 SHELL := /bin/bash
-
 APP_ROOT := <APP_ROOT>
-
 .DEFAULT_GOAL := help
 
 # ─── Help ─────────────────────────────────────────────────────────────
@@ -34,11 +26,11 @@ install-hooks: ## Re-install git hooks
 	# <INSTALL_HOOKS_CMD>
 
 .PHONY: clean
-clean: ## Remove caches and build artifacts (keeps dependencies)
+clean: ## Remove caches and build artifacts
 	# <CLEAN_CMD>
 
 .PHONY: clean-all
-clean-all: ## Remove caches AND dependencies (forces full reinstall)
+clean-all: ## Remove caches AND dependencies
 	$(MAKE) clean
 	# <CLEAN_ALL_CMD>
 
@@ -106,17 +98,12 @@ audit: ## Dependency vulnerability audit
 	# <AUDIT_CMD>
 
 .PHONY: ci
-ci: ## Reproduce CI locally — full quality gate
-	@echo "→ Format check"
-	$(MAKE) format-check
-	@echo "→ Lint"
-	$(MAKE) lint
-	@echo "→ Type check"
-	$(MAKE) check-types
-	@echo "→ Build"
-	$(MAKE) build
-	@echo "→ Test"
-	$(MAKE) test
+ci: ## Reproduce CI locally
+	@echo "→ Format check" && $(MAKE) format-check
+	@echo "→ Lint"         && $(MAKE) lint
+	@echo "→ Type check"   && $(MAKE) check-types
+	@echo "→ Build"        && $(MAKE) build
+	@echo "→ Test"         && $(MAKE) test
 	@echo "✓ CI gate passed"
 
 # ─── Database / migrations ───────────────────────────────────────────
@@ -138,9 +125,7 @@ db-seed: ## Seed database with dev data
 .PHONY: worktree-new
 worktree-new: ## Create a feature worktree: make worktree-new TICKET=123 SLUG=my-feature
 	@if [[ -z "$(TICKET)" || -z "$(SLUG)" ]]; then \
-		echo "Usage: make worktree-new TICKET=<ticket> SLUG=<slug>"; \
-		exit 2; \
-	fi
+		echo "Usage: make worktree-new TICKET=<ticket> SLUG=<slug>"; exit 2; fi
 	./scripts/worktree-new.sh $(TICKET) $(SLUG)
 
 .PHONY: worktree-list
@@ -210,10 +195,6 @@ claude-audit: ## Audit Claude Code permission settings
 claude-audit-global: ## Audit global Claude Code settings
 	bash scripts/claude-audit.sh --global
 
-.PHONY: claude-audit-verbose
-claude-audit-verbose: ## Verbose audit with raw transcript matches
-	bash scripts/claude-audit.sh --verbose
-
 # ─── Daily shortcuts ─────────────────────────────────────────────────
 
 .PHONY: up
@@ -224,10 +205,10 @@ up: ## Daily start: local services + dev server
 .PHONY: down
 down: ## Daily stop: stop local services
 	$(MAKE) services-stop
-	@echo "Tip: dev servers run in the foreground — stop them with Ctrl+C."
+	@echo "Tip: stop dev servers with Ctrl+C."
 
 .PHONY: status
-status: ## Quick view: services + git + beads status
+status: ## Quick view: services + git + beads
 	@echo "── Services ──"
 	@$(MAKE) -s services-status || true
 	@echo ""

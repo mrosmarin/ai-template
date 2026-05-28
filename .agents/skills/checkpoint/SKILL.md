@@ -1,16 +1,15 @@
 ---
 name: checkpoint
 description: >
-  Save session state before a devcontainer refresh or end of session. Updates
-  memory/beads, syncs docs, updates tickets, commits + pushes. Use when the user
-  says "checkpoint", "save state", "before refresh", "handoff", or "wrap up".
+  Save session state before a devcontainer refresh or end of session.
+  Use when the user says "checkpoint", "save state", "before refresh", "handoff", or "wrap up".
 argument-hint: '[optional note about what to emphasize]'
 user-invocable: true
 ---
 
 # Checkpoint
 
-Persist session state so a devcontainer refresh can pick up where this one left off.
+Persist session state so a devcontainer refresh picks up where this one left off.
 On-demand version of CLAUDE.md "Pre-commit hygiene order" with a guaranteed push.
 
 ## Hard rules
@@ -18,7 +17,7 @@ On-demand version of CLAUDE.md "Pre-commit hygiene order" with a guaranteed push
 - **Never touch `SCRATCHPAD.md`.** Reading OK; writing/staging forbidden.
 - **Never commit or push without an explicit "yes".**
 - **Never stage secrets.** `.devcontainer/.env` and `.env*` are gitignored.
-- **Never push directly to `<BASE_BRANCH>` or `<PROD_BRANCH>`.** Move to a feature/chore branch first.
+- **Never push directly to `<BASE_BRANCH>` or `<PROD_BRANCH>`.**
 
 ## Procedure
 
@@ -31,12 +30,14 @@ On-demand version of CLAUDE.md "Pre-commit hygiene order" with a guaranteed push
 1. Run `bd prime`.
 <!-- /STACK -->
 2. `git branch --show-current && git status --short && git log --oneline -8`
-3. Identify tickets/tasks worked and what changed.
+<!-- STACK:all,beads-linear,beads-memory,beads -->
+3. `bd ready --json 2>/dev/null`
+<!-- /STACK -->
 
 <!-- STACK:all,bank-linear,beads-memory -->
 ### Step 1 — Memory bank
 
-Update `activeContext.md` (dated banner, current focus, next steps) and `progress.md`. Others as touched.
+Update `activeContext.md` (dated banner, focus, next steps) and `progress.md`. Others as touched.
 <!-- /STACK -->
 
 <!-- STACK:all,beads-linear,beads-memory,beads -->
@@ -52,17 +53,17 @@ Update only what changed.
 <!-- STACK:all,bank-linear,beads-linear -->
 ### Step 3 — Linear
 
-Comment on each ticket: what landed, what was delegated, verification results. Tick verified boxes. Record next ticket up.
+Comment on each ticket: what landed, delegations, verifications. Tick verified boxes. Record next ticket.
 <!-- /STACK -->
 
 ### Step 4 — Branch guard
 
-If on `<BASE_BRANCH>` or `<PROD_BRANCH>`, create `chore/<PREFIX>-XXX-checkpoint` first.
+If on `<BASE_BRANCH>` or `<PROD_BRANCH>`: `git checkout -b chore/<PREFIX>-XXX-checkpoint`
 
 ### Step 5 — Stage, show, WAIT
 
 `git add memory-bank/ <changed docs...>` — NEVER `git add -A`, NEVER stage SCRATCHPAD or .env.
-Show staged files + proposed commit message. **Stop and wait for "yes."**
+Show staged files + proposed message. **Stop and wait for "yes."**
 
 ### Step 6 — Persist
 

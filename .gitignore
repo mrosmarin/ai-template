@@ -2,6 +2,8 @@
 
 # dependencies
 /node_modules
+vendor/
+.venv/
 **/node_modules
 /.pnp
 .pnp.js
@@ -16,8 +18,18 @@
 .env.production.local
 
 # Testing
+dist/
+.next/
+.turbo/
+out/
+coverage/
 coverage
 coverage-*
+
+
+# Beads database (synced via dolt, not git)
+.beads/embeddeddolt/
+.beads/dolt/
 
 # next.js
 /.next/
@@ -37,12 +49,14 @@ dist
 
 
 # Debug
+*.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
 # Misc
 .DS_Store
+Thumbs.db
 *.pem
 
 
@@ -56,8 +70,6 @@ kitchen-sink/
 .langgraph_api
 
 .temp
-
-.archive/infra2/opentelemetry-helm-charts
 
 .claude/settings.local.json
 

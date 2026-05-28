@@ -1,58 +1,46 @@
 #!/usr/bin/env bash
-# scripts/worktree-new.sh — create a feature-branch worktree.
-# Usage: scripts/worktree-new.sh <ticket> <slug>
-
+# scripts/worktree-new.sh — create a feature-branch worktree
 set -euo pipefail
 
 TICKET_PREFIX="<PREFIX>"
 BASE_BRANCH="<BASE_BRANCH>"
 
-if [[ $# -ne 2 ]]; then
-  echo "Usage: $0 <ticket> <slug>" >&2; exit 2
-fi
-
+[[ $# -ne 2 ]] && { echo "Usage: $0 <ticket> <slug>" >&2; exit 2; }
 TICKET_RAW="$1"; SLUG="$2"
-PREFIX_LOWER="$(printf '%s' "$TICKET_PREFIX" | tr '[:upper:]' '[:lower:]')"
-PREFIX_UPPER="$(printf '%s' "$TICKET_PREFIX" | tr '[:lower:]' '[:upper:]')"
-TICKET="${TICKET_RAW#${PREFIX_LOWER}-}"; TICKET="${TICKET#${PREFIX_UPPER}-}"
-TICKET="$(printf '%s' "$TICKET" | tr '[:upper:]' '[:lower:]')"
+PL="$(printf '%s' "$TICKET_PREFIX" | tr '[:upper:]' '[:lower:]')"
+PU="$(printf '%s' "$TICKET_PREFIX" | tr '[:lower:]' '[:upper:]')"
+T="${TICKET_RAW#${PL}-}"; T="${T#${PU}-}"; T="$(printf '%s' "$T" | tr '[:upper:]' '[:lower:]')"
+[[ "$T" =~ ^[0-9]+$ ]] || { echo "Error: ticket must be a number" >&2; exit 2; }
+[[ "$SLUG" =~ ^[a-z0-9]([a-z0-9-]*[a-z0-9])?$ ]] || { echo "Error: slug must be kebab-case" >&2; exit 2; }
 
-[[ "$TICKET" =~ ^[0-9]+$ ]] || { echo "Error: ticket must be a number (got: $TICKET_RAW)" >&2; exit 2; }
-[[ "$SLUG" =~ ^[a-z0-9]([a-z0-9-]*[a-z0-9])?$ ]] || { echo "Error: slug must be lowercase kebab-case (got: $SLUG)" >&2; exit 2; }
+R="$(git rev-parse --show-toplevel)" || { echo "Error: not in git repo" >&2; exit 1; }
+BR="feature/${PL}-${T}-${SLUG}"
+WD="${R}/.claude/worktrees/${PL}-${T}-${SLUG}"
 
-REPO_ROOT="$(git rev-parse --show-toplevel 2>/dev/null)" || { echo "Error: not in a git repo" >&2; exit 1; }
-BRANCH="feature/${PREFIX_LOWER}-${TICKET}-${SLUG}"
-WORKTREE_DIR="${REPO_ROOT}/.claude/worktrees/${PREFIX_LOWER}-${TICKET}-${SLUG}"
+git -C "$R" show-ref --verify --quiet "refs/heads/${BR}" 2>/dev/null && { echo "Error: branch exists locally" >&2; exit 1; }
+echo "→ Fetching origin..."; git -C "$R" fetch origin --quiet
+git -C "$R" show-ref --verify --quiet "refs/remotes/origin/${BR}" 2>/dev/null && { echo "Error: branch exists on origin" >&2; exit 1; }
+git -C "$R" show-ref --verify --quiet "refs/remotes/origin/${BASE_BRANCH}" || { echo "Error: origin/${BASE_BRANCH} not found" >&2; exit 1; }
+[[ -e "$WD" ]] && { echo "Error: path exists" >&2; exit 1; }
 
-git -C "$REPO_ROOT" show-ref --verify --quiet "refs/heads/${BRANCH}" 2>/dev/null && { echo "Error: branch ${BRANCH} exists locally" >&2; exit 1; }
+mkdir -p "${R}/.claude/worktrees"
+echo "→ Creating worktree: $WD (branch: $BR)"
+git -C "$R" worktree add "$WD" -b "$BR" "origin/${BASE_BRANCH}"
 
-echo "→ Fetching origin..."
-git -C "$REPO_ROOT" fetch origin --quiet
-git -C "$REPO_ROOT" show-ref --verify --quiet "refs/remotes/origin/${BRANCH}" 2>/dev/null && { echo "Error: branch ${BRANCH} exists on origin" >&2; exit 1; }
-git -C "$REPO_ROOT" show-ref --verify --quiet "refs/remotes/origin/${BASE_BRANCH}" || { echo "Error: origin/${BASE_BRANCH} not found" >&2; exit 1; }
-[[ -e "$WORKTREE_DIR" ]] && { echo "Error: path exists: $WORKTREE_DIR" >&2; exit 1; }
-
-mkdir -p "${REPO_ROOT}/.claude/worktrees"
-echo "→ Creating worktree: $WORKTREE_DIR (branch: $BRANCH)"
-git -C "$REPO_ROOT" worktree add "$WORKTREE_DIR" -b "$BRANCH" "origin/${BASE_BRANCH}"
-
-INCLUDE_FILE="${REPO_ROOT}/.worktreeinclude"
-if [[ -f "$INCLUDE_FILE" ]]; then
-  echo "→ Copying files from .worktreeinclude..."
-  while IFS= read -r pattern || [[ -n "$pattern" ]]; do
-    [[ -z "$pattern" || "$pattern" =~ ^[[:space:]]*# ]] && continue
-    shopt -s nullglob globstar
-    matches=( ${REPO_ROOT}/${pattern} )
-    shopt -u nullglob globstar
+INC="${R}/.worktreeinclude"
+if [[ -f "$INC" ]]; then
+  echo "→ Copying from .worktreeinclude..."
+  while IFS= read -r pat || [[ -n "$pat" ]]; do
+    [[ -z "$pat" || "$pat" =~ ^[[:space:]]*# ]] && continue
+    shopt -s nullglob globstar; matches=( ${R}/${pat} ); shopt -u nullglob globstar
     for src in "${matches[@]}"; do
-      rel="${src#${REPO_ROOT}/}"; dst="${WORKTREE_DIR}/${rel}"
+      rel="${src#${R}/}"; dst="${WD}/${rel}"
       mkdir -p "$(dirname "$dst")"; cp "$src" "$dst"; echo "    [ok] $rel"
     done
-  done < "$INCLUDE_FILE"
+  done < "$INC"
 fi
 
-REL=".claude/worktrees/${PREFIX_LOWER}-${TICKET}-${SLUG}"
-echo ""
-echo "Worktree ready at ${REL}/"
-echo "  cd ${REL} && <INSTALL_CMD> && claude"
-echo "  Cleanup: git worktree remove ${REL} && git branch -D ${BRANCH}"
+RP=".claude/worktrees/${PL}-${T}-${SLUG}"
+echo ""; echo "Worktree ready: ${RP}/"
+echo "  cd ${RP} && <INSTALL_CMD> && claude"
+echo "  Cleanup: git worktree remove ${RP} && git branch -D ${BR}"
