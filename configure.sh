@@ -195,7 +195,9 @@ ok "ssh-setup.sh"
 info "Stripping stack sections for: ${STACK}..."
 
 strip_stack_sections() {
-  local file="$1" stack="$2" tmpfile="${file}.tmp"
+  local file="$1"
+  local stack="$2"
+  local tmpfile="${file}.tmp"
   [[ ! -f "$file" ]] && return
   python3 - "$file" "$stack" "$tmpfile" << 'PYEOF'
 import sys, re

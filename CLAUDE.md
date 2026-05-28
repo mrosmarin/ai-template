@@ -45,11 +45,13 @@ Beads (`bd`) is the agent-native issue tracker.
 - `bd dolt push` — sync to remote.
 
 **Do not** use markdown TODO lists — use `bd create`.
+<!-- /STACK -->
 
 <!-- STACK:all,beads-linear -->
 **Beads ↔ Linear:** Beads handles agent working memory. Linear is the stakeholder source of truth. Update both when closing.
 <!-- /STACK -->
 
+<!-- STACK:all,beads-linear,beads-memory,beads -->
 **Beads Viewer (`bv`):** **Never run bare `bv`** — always use `--robot-*` flags:
 - `bv --robot-triage` — ranked recommendations.
 - `bv --robot-plan` — parallel execution tracks.
