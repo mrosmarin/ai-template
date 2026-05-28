@@ -1,65 +1,56 @@
-// For format details, see https://aka.ms/devcontainer.json. For config options, see the
-// README at: https://github.com/devcontainers/templates/tree/main/src/javascript-node-postgres
+// For format details, see https://aka.ms/devcontainer.json.
+// configure.sh rewrites this file with project-specific name and volumes.
 {
-	"name": "ai-template_devcontainer",
-	"dockerComposeFile": "docker-compose.yml",
-	"service": "app",
-	"workspaceFolder": "/workspaces/${localWorkspaceFolderBasename}",
+  "name": "ai-template_devcontainer",
+  "dockerComposeFile": "docker-compose.yml",
+  "service": "app",
+  "workspaceFolder": "/workspaces/${localWorkspaceFolderBasename}",
 
-	"mounts": [
-		"source=${localEnv:HOME}/.ssh,target=/home/vscode/.ssh,type=bind,consistency=cached",
-		"source=${localEnv:HOME}/Projects/ai-template/.devcontainer/.bashrc,target=/home/vscode/.bashrc,type=bind,consistency=cached",
-		"source=${localEnv:HOME}/Projects/ai-template/.devcontainer/.zshrc,target=/home/vscode/.zshrc,type=bind,consistency=cached",	
-		"source=ai-template-claude-code-config,target=/home/node/.claude,type=volume" 		
-	],
+  "mounts": [
+    // Shell config — uses workspace-relative paths (portable, no hardcoded host dirs)
+    "source=${localWorkspaceFolder}/.devcontainer/.bashrc,target=/home/vscode/.bashrc,type=bind,consistency=cached",
+    "source=${localWorkspaceFolder}/.devcontainer/.zshrc,target=/home/vscode/.zshrc,type=bind,consistency=cached",
+    // Persistent Claude Code config across rebuilds
+    "source=ai-template-claude-code-config,target=/home/node/.claude,type=volume"
+    // NOTE: No host SSH mount. SSH keys are generated in-container.
+    // After devcontainer builds, run: make ssh-setup
+  ],
 
-	// Features to add to the dev container. More info: https://containers.dev/features.
-	"features": {
-		"ghcr.io/devcontainers/features/node:2": {
-		},
-		"ghcr.io/devcontainers/features/python:1": {
-			"version": "latest"
-		},
-		// "ghcr.io/devcontainers/features/kubectl-helm-minikube:1": {},
-		"ghcr.io/devcontainers-extra/features/typescript:2": {},
-		"ghcr.io/devcontainers/features/docker-in-docker:2": {
-			"moby": "false"
-		},
-		"ghcr.io/devcontainers/features/go:1": {
-			"version": "latest",
-			"golangciLintVersion": "latest"
-		}
-	},
-	"customizations": {
-		"vscode": {
-			"extensions": [
-				"pomdtr.excalidraw-editor",
-				"hediet.vscode-drawio",
-				"alefragnani.Bookmarks",
-				"christian-kohler.npm-intellisense",
-				"donjayamanne.githistory",
-				"kilocode.kilo-code",
-				"Anthropic.claude-code",
-				"MermaidChart.vscode-mermaid-chart",
-				"vstirbu.vscode-mermaid-preview",
-				"Supabase.vscode-supabase-extension",
-				"ms-playwright.playwright",
-				"frenco.vscode-vercel",
-				"ReprEng.csv",
-				"ms-kubernetes-tools.vscode-kubernetes-tools"
-			]
-		}
-	},
+  "features": {
+    "ghcr.io/devcontainers/features/node:2": {},
+    "ghcr.io/devcontainers/features/python:1": {
+      "version": "latest"
+    },
+    "ghcr.io/devcontainers-extra/features/typescript:2": {},
+    "ghcr.io/devcontainers/features/docker-in-docker:2": {
+      "moby": "false"
+    },
+    "ghcr.io/devcontainers/features/go:1": {
+      "version": "latest",
+      "golangciLintVersion": "latest"
+    }
+  },
 
-	// Use 'forwardPorts' to make a list of ports inside the container available locally.
-	// This can be used to network with other containers or with the host.
-	// "forwardPorts": [3000, 5432],
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "pomdtr.excalidraw-editor",
+        "hediet.vscode-drawio",
+        "alefragnani.Bookmarks",
+        "christian-kohler.npm-intellisense",
+        "donjayamanne.githistory",
+        "kilocode.kilo-code",
+        "Anthropic.claude-code",
+        "MermaidChart.vscode-mermaid-chart",
+        "vstirbu.vscode-mermaid-preview",
+        "Supabase.vscode-supabase-extension",
+        "ms-playwright.playwright",
+        "frenco.vscode-vercel",
+        "ReprEng.csv",
+        "ms-kubernetes-tools.vscode-kubernetes-tools"
+      ]
+    }
+  },
 
-	// Use 'postCreateCommand' to run commands after the container is created.
-	"postCreateCommand": "./.devcontainer/post-install.sh"
-	// Configure tool-specific properties.
-	// "customizations": {},
-
-	// Uncomment to connect as root instead. More info: https://aka.ms/dev-containers-non-root.
-	// "remoteUser": "root"
+  "postCreateCommand": "./.devcontainer/postinstall.sh"
 }
