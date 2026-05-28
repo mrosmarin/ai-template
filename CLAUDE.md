@@ -2,8 +2,16 @@
 
 ## Start of Every Session
 
+<!-- STACK:all,bank-linear,beads-memory -->
 1. Read `.claude/rules/memory-bank.md`
 2. Read **all files** in `memory-bank/`
+<!-- /STACK -->
+<!-- STACK:beads,beads-linear -->
+1. Run `bd prime` to load persistent memory and workflow context.
+<!-- /STACK -->
+<!-- STACK:all -->
+3. Run `bd prime` to load Beads context alongside the memory bank.
+<!-- /STACK -->
 
 ---
 
@@ -13,11 +21,41 @@ I'm a senior software engineer working on the <PROJECT_NAME> MVP. I focus on the
 
 ---
 
+<!-- STACK:all,bank-linear,beads-linear -->
 ## Linear — Source of Truth
 
 Workspace: `<LINEAR_WORKSPACE>`
 
 Linear is the single source of truth for all tasks, requirements, and context. Every piece of work must have a corresponding ticket. When in doubt about scope, requirements, or priority — check Linear first.
+<!-- /STACK -->
+
+<!-- STACK:all,beads-linear,beads-memory,beads -->
+## Beads — Agent Task Tracking
+
+Beads (`bd`) is the agent-native issue tracker. Use it for all task management during coding sessions.
+
+**Core workflow:**
+- `bd prime` — load workflow context and persistent memories at session start.
+- `bd ready` — see unblocked tasks (no open dependencies).
+- `bd show <id>` — view task details and audit trail.
+- `bd update <id> --claim` — claim a task before working on it.
+- `bd create "Title" -p <priority>` — create new tasks as discovered.
+- `bd close <id> "Summary"` — close completed tasks.
+- `bd remember "insight"` — store persistent project memory.
+- `bd dolt push` — sync to remote at end of session.
+
+**Do not** use markdown TODO lists for task tracking — use `bd create` instead.
+
+<!-- STACK:all,beads-linear -->
+**Beads ↔ Linear:** Beads handles the agent's working memory and dependency tracking. Linear remains the stakeholder-facing source of truth. When closing a Beads task that maps to a Linear ticket, update both.
+<!-- /STACK -->
+
+**Beads Viewer (`bv`):** Use `bv` for graph visualization, kanban boards, and stakeholder reports. **Never run bare `bv`** in an agent context — always use `--robot-*` flags:
+- `bv --robot-triage` — ranked recommendations with scores.
+- `bv --robot-plan` — parallel execution tracks.
+- `bv --robot-insights` — PageRank, critical path, cycles.
+- `bv --export-graph report.html` — self-contained HTML for stakeholders.
+<!-- /STACK -->
 
 ---
 
@@ -31,23 +69,21 @@ The feature-branch workflow is active.
 
 - Every worktree must be on a `feature/<PREFIX>-XXX-description` branch — **never directly on `<BASE_BRANCH>` or `<PROD_BRANCH>`**.
 - If the current worktree is on `<BASE_BRANCH>` or `<PROD_BRANCH>`, stop and create/check out a feature branch before doing anything.
+<!-- STACK:all,bank-linear,beads-linear -->
 - Branch names: lowercase + hyphens, always prefixed with the Linear ticket ID (e.g., `feature/<PREFIX>-127-add-auth-guard`).
+<!-- /STACK -->
+<!-- STACK:beads-memory,beads -->
+- Branch names: lowercase + hyphens, prefixed with the project prefix + ID (e.g., `feature/<PREFIX>-127-add-auth-guard`).
+<!-- /STACK -->
 - `hotfix/<PREFIX>-XXX-description` for urgent production fixes; same flow, expedited review.
 
 Worktree commands (see [WORKTREES.md](WORKTREES.md) for the full flow):
 
 ```bash
-# Recommended: helper handles branch + env file copy
 make worktree-new TICKET=192 SLUG=my-feature
-# → .claude/worktrees/<PREFIX>-192-my-feature/  (gitignored)
-#   on branch feature/<PREFIX>-192-my-feature off origin/<BASE_BRANCH>
-
-# Manual fallback
-git fetch origin
-git worktree add .claude/worktrees/<PREFIX>-XXX-slug -b feature/<PREFIX>-XXX-description origin/<BASE_BRANCH>
 ```
 
-Do not use `claude --worktree` for PR-bound work — its auto-named `worktree-<name>` branches violate the `feature/<PREFIX>-XXX-*` naming convention.
+Do not use `claude --worktree` for PR-bound work — its auto-named `worktree-<name>` branches violate the naming convention.
 
 Full PR process and commit-message conventions live in [CONTRIBUTING.md](CONTRIBUTING.md).
 
@@ -66,14 +102,24 @@ Full PR process and commit-message conventions live in [CONTRIBUTING.md](CONTRIB
 
 ## Ticket Close-Out
 
-**A ticket does not move to Done until every checkbox in its description is ticked AND every test, task, and acceptance gate has actually been run** — not just documented. When closing:
+<!-- STACK:all,bank-linear,beads-linear -->
+**A ticket does not move to Done until every checkbox in its description is ticked AND every test, task, and acceptance gate has actually been run.** When closing:
 
 1. Walk through every `- [ ]` in the description and confirm each is verified.
 2. Update the description so the boxes show `- [x]`.
 3. Add a close-out comment summarizing what landed, what was delegated (with the receiving ticket), and any verification results.
 4. Only then move the ticket state to Done.
+<!-- /STACK -->
 
-If a verification gate requires runtime work (e.g., the dev server must start without errors), actually run it. Don't defer it to the user unless explicitly delegating.
+<!-- STACK:beads-memory,beads -->
+**A task does not close until every acceptance gate has actually been run.** When closing:
+
+1. Verify all acceptance criteria are met.
+2. `bd close <id> "Summary of what landed and verification results"`.
+3. If new problems surfaced, `bd create` them with `--deps discovered-from:<id>`.
+<!-- /STACK -->
+
+If a verification gate requires runtime work (e.g., the dev server must start without errors), actually run it.
 
 ---
 
@@ -85,49 +131,52 @@ Show the proposed commit message and staged files, then wait for a "yes" before 
 
 ### Pre-commit hygiene order
 
-Before every commit in this repo, update in this order:
+Before every commit, update in this order:
 
-1. **Memory bank** — refresh `memory-bank/*.md` (at minimum `activeContext.md` and `progress.md`; others as touched).
-2. **Docs** — update `README.md`, `CLAUDE.md`, and any per-feature docs to match the new code reality.
-3. **Linear ticket comment** — post/update the comment on the ticket the work belongs to.
+<!-- STACK:all,bank-linear,beads-memory -->
+1. **Memory bank** — refresh `memory-bank/*.md` (at minimum `activeContext.md` and `progress.md`).
+<!-- /STACK -->
+<!-- STACK:all,beads-linear,beads-memory,beads -->
+1. **Beads** — `bd update` or `bd close` relevant tasks. `bd remember` any insights.
+<!-- /STACK -->
+2. **Docs** — update `README.md`, `CLAUDE.md`, and any per-feature docs.
+<!-- STACK:all,bank-linear,beads-linear -->
+3. **Linear ticket comment** — post/update the comment on the ticket.
+<!-- /STACK -->
 4. **Then** `git add` and `git commit` (conventional-commits format).
-
-Memory bank, docs, and the ticket comment ride along in the same commit batch — they don't get bolted on afterwards. If you're about to commit without having touched these, stop and complete the loop first.
 
 ---
 
 ## Tooling — Skills & MCPs
 
-Agentic tooling is checked into git so every session inherits the same surface.
-
-- **Skills** live under `.agents/skills/<name>/` and are pinned in `skills-lock.json` at the repo root. Add new skills with `npx skills add <source>`.
-- **MCP servers** are configured in `.mcp.json` at the repo root.
-- **Pin explicit versions** on MCP server `args` (e.g. `shadcn@4.7.0`, not `shadcn@latest`) so servers don't drift between sessions.
-- **Library docs**: for any library / framework / CLI question, fetch current docs via the **Context7 MCP** (`mcp__context7__resolve-library-id` → `mcp__context7__query-docs`) before answering. Training data lags; assume APIs may have moved.
+- **Skills** live under `.agents/skills/<name>/` and are pinned in `skills-lock.json`.
+- **MCP servers** are configured in `.mcp.json`.
+- **Pin explicit versions** on MCP server `args`.
+- **Library docs**: fetch current docs via **Context7 MCP** before answering.
 
 ---
 
+<!-- STACK:all,bank-linear,beads-memory -->
 ## Memory Bank
 
 When asked to **update memory bank**, review and update every file in `memory-bank/`.
 Location: `memory-bank/` off the repo root.
+<!-- /STACK -->
 
 ---
 
 ## Scratchpad
 
-`.devcontainer/SCRATCHPAD.md` is a personal capture file (gitignored) for ideas, discussion points, TODOs, and decisions that come up mid-session.
+`.devcontainer/SCRATCHPAD.md` is a personal capture file (gitignored) for ideas, discussion points, TODOs, and decisions.
 
-If a tangential idea, question, or TODO comes up while working on a task — something that's worth remembering but not worth derailing the current work — offer to add it to the scratchpad instead of acting on it. Keep the current task moving.
+If a tangential idea comes up mid-task, offer to add it to the scratchpad instead of acting on it.
 
-When asked to **check scratchpad** or **review scratchpad**, read `.devcontainer/SCRATCHPAD.md` and help triage: promote actionable items to Linear tickets, move decisions into the memory bank, and clear out anything already done.
+When asked to **check scratchpad**, help triage: promote items to tickets, move decisions to memory bank, clear completed items.
 
-When asked to **start a review** or **review this work**, open the scratchpad's Review section and help the user walk through the checklist — log what's working, what's broken, and what they want changed. After the review, offer to batch-create Linear tickets from the "Not Working" and "Change Requests" items.
+When asked to **start a review**, open the scratchpad's Review section and walk through the checklist. After the review, offer to batch-create tickets from findings.
 
 ---
 
 ## Checkpoint
 
-Use `/checkpoint` (or say "checkpoint", "save state", "before refresh") to persist session state before a devcontainer refresh or end of session. The command runs the full pre-commit hygiene loop (memory bank → docs → Linear → commit) and guarantees a push so nothing is lost.
-
-Full procedure lives in `.claude/commands/checkpoint.md`.
+Use `/checkpoint` (or say "checkpoint", "save state", "before refresh") to persist session state before a devcontainer refresh. Full procedure in `.claude/commands/checkpoint.md`.

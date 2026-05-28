@@ -1,16 +1,8 @@
 # .worktreeinclude — gitignored files to copy into new worktrees
-#
-# One glob pattern per line (relative to repo root).
-# Lines starting with # are comments. Blank lines are ignored.
-# Patterns are expanded with bash globbing.
-#
-# These files are copied once at worktree creation time.
-# If you update them later, recopy manually or recreate the worktree.
+# Copied once at creation. Recopy manually if values change.
 
 .env
 .env.local
 .env.*.local
 config/local.json
-
-# Personal scratchpad (so it's available in worktrees too)
 .devcontainer/SCRATCHPAD.md

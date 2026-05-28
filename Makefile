@@ -1,24 +1,13 @@
 # Makefile — <PROJECT_NAME>
 #
-# Run from the repo root. Targets cover local services, dev servers,
-# quality gates, and worktree management.
-#
 # Quick reference:
 #   make help               # list everything
 #   make up                 # start local services + dev server
-#   make down               # stop local services
 #   make ci                 # reproduce CI locally
-#   make claude-audit       # audit Claude Code permission settings
 
 SHELL := /bin/bash
 
-# ── Configuration ─────────────────────────────────────────────────────
-# Adjust these to match your project layout.
-APP_ROOT        := <APP_ROOT>
-# If monorepo with multiple apps, add per-app paths here:
-# APP_ONE       := $(APP_ROOT)/apps/app-one
-# APP_TWO       := $(APP_ROOT)/apps/app-two
-# ──────────────────────────────────────────────────────────────────────
+APP_ROOT := <APP_ROOT>
 
 .DEFAULT_GOAL := help
 
@@ -40,35 +29,30 @@ install: ## Install all dependencies
 	<INSTALL_CMD>
 
 .PHONY: install-hooks
-install-hooks: ## Re-install git hooks (Husky, lefthook, etc.)
-	# <INSTALL_HOOKS_CMD>  ← e.g. pnpm exec husky
+install-hooks: ## Re-install git hooks
+	# <INSTALL_HOOKS_CMD>
 
 .PHONY: clean
 clean: ## Remove caches and build artifacts (keeps dependencies)
-	# <CLEAN_CMD>  ← e.g. find . -type d \( -name ".turbo" -o -name ".next" -o -name "dist" \) -prune -exec rm -rf {} +
+	# <CLEAN_CMD>
 
 .PHONY: clean-all
 clean-all: ## Remove caches AND dependencies (forces full reinstall)
 	$(MAKE) clean
-	# <CLEAN_ALL_CMD>  ← e.g. find . -type d -name "node_modules" -prune -exec rm -rf {} +
+	# <CLEAN_ALL_CMD>
 
 # ─── Local services ──────────────────────────────────────────────────
-# Adapt these targets to your database / Docker Compose / local infra.
-# For monorepos with per-app services, add per-app targets like:
-#   services-start-app-one, services-start-app-two, etc.
 
 .PHONY: services-start
 services-start: ## Start local services (database, cache, etc.)
-	# <SERVICES_START_CMD>  ← e.g. docker compose up -d
-	#                       ← e.g. cd apps/myapp && npx supabase start
+	# <SERVICES_START_CMD>
 
 .PHONY: services-stop
 services-stop: ## Stop local services
-	# <SERVICES_STOP_CMD>  ← e.g. docker compose down
+	# <SERVICES_STOP_CMD>
 
 .PHONY: services-status
 services-status: ## Show local service status
-	# <SERVICES_STATUS_CMD>  ← e.g. docker compose ps
 	@docker ps --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}" 2>/dev/null || echo "(no containers running)"
 
 .PHONY: services-restart
@@ -82,52 +66,43 @@ services-restart: ## Stop and restart local services
 dev: ## Run dev server
 	<DEV_CMD>
 
-# For monorepos with multiple apps, add per-app targets:
-# .PHONY: dev-app-one
-# dev-app-one: ## Run dev server for app-one only (http://localhost:<DEV_PORT>)
-# 	cd $(APP_ROOT) && <PACKAGE_MANAGER> turbo dev --filter=app-one
-
 # ─── Build / quality gates ───────────────────────────────────────────
 
 .PHONY: build
 build: ## Production build
-	# <BUILD_CMD>  ← e.g. cd $(APP_ROOT) && pnpm turbo build
+	# <BUILD_CMD>
 
 .PHONY: check-types
 check-types: ## Static type check
-	# <CHECK_TYPES_CMD>  ← e.g. cd $(APP_ROOT) && pnpm turbo check-types
+	# <CHECK_TYPES_CMD>
 
 .PHONY: lint
 lint: ## Run linter
-	# <LINT_CMD>  ← e.g. cd $(APP_ROOT) && pnpm turbo lint
+	# <LINT_CMD>
 
 .PHONY: format
 format: ## Auto-format all files
-	# <FORMAT_CMD>  ← e.g. pnpm exec prettier --write .
+	# <FORMAT_CMD>
 
 .PHONY: format-check
 format-check: ## Check formatting without writing
-	# <FORMAT_CHECK_CMD>  ← e.g. pnpm exec prettier --check .
+	# <FORMAT_CHECK_CMD>
 
 .PHONY: test
 test: ## Run test suite
-	# <TEST_CMD>  ← e.g. cd $(APP_ROOT) && pnpm turbo test
+	# <TEST_CMD>
 
 .PHONY: test-watch
 test-watch: ## Run tests in watch mode
-	# <TEST_WATCH_CMD>  ← e.g. cd $(APP_ROOT) && pnpm turbo test:watch
-
-.PHONY: test-coverage
-test-coverage: ## Run tests with coverage
-	# <TEST_COVERAGE_CMD>  ← e.g. cd $(APP_ROOT) && pnpm turbo test:coverage
+	# <TEST_WATCH_CMD>
 
 .PHONY: test-e2e
 test-e2e: ## Run E2E tests
-	# <TEST_E2E_CMD>  ← e.g. cd $(APP_ROOT) && pnpm test:e2e
+	# <TEST_E2E_CMD>
 
 .PHONY: audit
 audit: ## Dependency vulnerability audit
-	# <AUDIT_CMD>  ← e.g. pnpm audit --audit-level=high --prod
+	# <AUDIT_CMD>
 
 .PHONY: ci
 ci: ## Reproduce CI locally — full quality gate
@@ -144,44 +119,84 @@ ci: ## Reproduce CI locally — full quality gate
 	@echo "✓ CI gate passed"
 
 # ─── Database / migrations ───────────────────────────────────────────
-# Adapt to your database tooling (Supabase, Prisma, Drizzle, etc.)
 
 .PHONY: db-reset
-db-reset: ## Reset local database (re-run migrations + seed)
-	# <DB_RESET_CMD>  ← e.g. cd apps/myapp && npx supabase db reset
-	#                 ← e.g. npx prisma migrate reset
+db-reset: ## Reset local database
+	# <DB_RESET_CMD>
 
 .PHONY: db-migrate
 db-migrate: ## Apply pending migrations
-	# <DB_MIGRATE_CMD>  ← e.g. npx prisma migrate deploy
+	# <DB_MIGRATE_CMD>
 
 .PHONY: db-seed
 db-seed: ## Seed database with dev data
 	# <DB_SEED_CMD>
 
-# ─── Worktrees (parallel feature branches) ───────────────────────────
+# ─── Worktrees ───────────────────────────────────────────────────────
 
 .PHONY: worktree-new
 worktree-new: ## Create a feature worktree: make worktree-new TICKET=123 SLUG=my-feature
 	@if [[ -z "$(TICKET)" || -z "$(SLUG)" ]]; then \
 		echo "Usage: make worktree-new TICKET=<ticket> SLUG=<slug>"; \
-		echo "Example: make worktree-new TICKET=192 SLUG=my-feature"; \
 		exit 2; \
 	fi
 	./scripts/worktree-new.sh $(TICKET) $(SLUG)
 
 .PHONY: worktree-list
-worktree-list: ## List all worktrees attached to this repo
+worktree-list: ## List all worktrees
 	@git worktree list
 
 .PHONY: worktree-prune
-worktree-prune: ## Sweep stale worktree records (after manual rm of a worktree dir)
+worktree-prune: ## Sweep stale worktree records
 	@git worktree prune --verbose
+
+# <!-- STACK:all,beads-linear,beads-memory,beads -->
+# ─── Beads (bd) ──────────────────────────────────────────────────────
+
+.PHONY: bd-ready
+bd-ready: ## Show unblocked Beads tasks
+	bd ready
+
+.PHONY: bd-prime
+bd-prime: ## Print Beads workflow context + persistent memories
+	bd prime
+
+.PHONY: bd-push
+bd-push: ## Push Beads database to remote
+	bd dolt push
+
+.PHONY: bd-pull
+bd-pull: ## Pull latest Beads database from remote
+	bd dolt pull
+
+# ─── Beads Viewer (bv) ──────────────────────────────────────────────
+
+.PHONY: bv-triage
+bv-triage: ## Robot triage — ranked recommendations
+	bv --robot-triage
+
+.PHONY: bv-plan
+bv-plan: ## Robot plan — parallel execution tracks
+	bv --robot-plan
+
+.PHONY: bv-insights
+bv-insights: ## Robot insights — PageRank, critical path, cycles
+	bv --robot-insights
+
+.PHONY: bv-kanban
+bv-kanban: ## Open interactive Beads Viewer TUI
+	bv
+
+.PHONY: bv-export
+bv-export: ## Export interactive HTML graph for stakeholders
+	bv --export-graph report-$$(date +%Y%m%d).html
+	@echo "→ Exported to report-$$(date +%Y%m%d).html"
+# <!-- /STACK -->
 
 # ─── Claude Code ─────────────────────────────────────────────────────
 
 .PHONY: claude-audit
-claude-audit: ## Audit Claude Code permission settings and suggest improvements
+claude-audit: ## Audit Claude Code permission settings
 	bash scripts/claude-audit.sh
 
 .PHONY: claude-audit-global
@@ -195,20 +210,24 @@ claude-audit-verbose: ## Verbose audit with raw transcript matches
 # ─── Daily shortcuts ─────────────────────────────────────────────────
 
 .PHONY: up
-up: ## Daily start: bring up local services + dev server
+up: ## Daily start: local services + dev server
 	$(MAKE) services-start
 	$(MAKE) dev
 
 .PHONY: down
-down: ## Daily stop: stop local services (dev servers are foreground — Ctrl+C them)
+down: ## Daily stop: stop local services
 	$(MAKE) services-stop
-	@echo ""
-	@echo "Tip: dev servers run in the foreground — stop them with Ctrl+C in their terminal."
+	@echo "Tip: dev servers run in the foreground — stop them with Ctrl+C."
 
 .PHONY: status
-status: ## Quick view: local services + git status
+status: ## Quick view: services + git + beads status
 	@echo "── Services ──"
 	@$(MAKE) -s services-status || true
 	@echo ""
-	@echo "── Git status ──"
+	@echo "── Git ──"
 	@git status --short
+# <!-- STACK:all,beads-linear,beads-memory,beads -->
+	@echo ""
+	@echo "── Beads ──"
+	@bd ready 2>/dev/null || true
+# <!-- /STACK -->

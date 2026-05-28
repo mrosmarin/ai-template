@@ -6,76 +6,102 @@
 
 ## How it works
 
-1. Open Claude Code at the repo root.
+1. Open Claude Code at the repo root (devcontainer should already be running — all tools are pre-installed).
 2. Say: **"Run the bootstrap process in BOOTSTRAP.md"**
 3. Claude Code will ask the questions below, one section at a time.
 4. After all answers are collected, Claude Code will:
-   - Update `CLAUDE.md`, `CONTRIBUTING.md`, `DEPLOYMENT-ENV.md`, `WORKTREES.md`, `README.md`, and the `Makefile` with your project-specific values.
-   - Remove all `<PLACEHOLDER>` markers.
+   - Hydrate all template docs with your project-specific values.
+   - Remove sections that don't apply to the chosen stack.
+   - Initialize Beads (`bd init`) if the stack includes it.
+   - Create the memory bank if the stack includes it.
    - Delete this file.
-   - Make a single commit: `chore(bootstrap): hydrate project docs from bootstrap answers`
+   - Commit: `chore(bootstrap): hydrate project docs — stack: <STACK>`
 
 ---
 
 ## Questions
 
-Claude Code: ask these in order. Collect all answers before editing any files. If the user doesn't know an answer yet, mark it `TBD` in the docs — they can fill it in later.
+Claude Code: ask these in order. Collect all answers before editing any files. If the user doesn't know an answer yet, mark it `TBD`.
 
-### 1 — Project identity
+### Q0 — Stack selection (ask first — everything else depends on this)
 
-- What is the project name? (used in README title, doc headers)
-- One-line description of what you're building?
-- Is this a monorepo? If so, what is the root app directory? (e.g. `apps/`, `packages/`, or flat)
+Which memory + tracking stack do you want?
+
+| Stack | Memory Layer | Task Tracking | Stakeholder View |
+|---|---|---|---|
+| **all** | `memory-bank/*.md` + `bd remember` | Beads + Linear | Linear + `bv` |
+| **bank-linear** | `memory-bank/*.md` | Linear | Linear |
+| **beads-linear** | `bd remember` / `bd prime` | Beads + Linear | Linear + `bv` |
+| **beads-memory** | `memory-bank/*.md` | Beads | `bv` (TUI / HTML export) |
+| **beads** | `bd remember` / `bd prime` | Beads | `bv` (TUI / HTML export) |
+
+### Q1 — Project identity
+
+- What is the project name?
+- One-line description?
+- Is this a monorepo? If so, what is the root app directory?
 - What is the GitHub repo path? (e.g. `org/repo-name`)
 
-### 2 — Linear workspace
+### Q2 — Linear workspace (skip if stack has no Linear)
 
-- What is your Linear workspace slug? (the part after `linear.app/` — e.g. `myteam`)
-- What is your ticket prefix? (e.g. `NOB`, `ENG`, `PROJ` — used in branch names like `feature/<prefix>-123-description`)
-- Are there multiple Linear projects/teams, or just one? If multiple, list them with their prefixes.
+- What is your Linear workspace slug?
+- What is your ticket prefix? (e.g. `NOB`, `ENG`, `PROJ`)
+- Multiple Linear projects/teams? List them with prefixes.
 
-### 3 — Branching & environments
+### Q3 — Branching & environments
 
-- What is your base branch for feature work? (e.g. `qa`, `develop`, `staging`)
-- What is your production branch? (e.g. `main`, `production`)
-- Does merging to production require approvals? How many?
-- Is branch protection enforced by GitHub, or convention-only?
+- Base branch for feature work? (e.g. `qa`, `develop`, `staging`)
+- Production branch? (e.g. `main`, `production`)
+- Approvals required for prod merge?
+- Branch protection: GitHub-enforced or convention-only?
+- **If no Linear:** what prefix for branch names? (e.g. project initials)
 
-### 4 — Tech stack
+### Q4 — Tech stack
 
-- What language/framework? (e.g. Next.js, Rails, Go, Python/FastAPI)
-- Package manager? (e.g. pnpm, npm, yarn, pip, cargo)
-- Database? (e.g. Supabase/Postgres, PlanetScale, MongoDB, none yet)
-- Hosting/deploy platform? (e.g. Vercel, Railway, Fly.io, AWS)
-- Any other key services? (e.g. Redis, S3, Stripe, auth provider)
+- Language/framework?
+- Package manager?
+- Database?
+- Hosting/deploy platform?
+- Other key services?
 
-### 5 — Development environment
+### Q5 — Development environment
 
-All environments use **devcontainers running VS Code with Docker-in-Docker**.
+- Existing `.devcontainer/devcontainer.json`?
+- Local services via Docker Compose?
+- Dev server ports?
+- Gitignored files to copy into worktrees? (patterns for `.worktreeinclude`)
+- First-time setup sequence?
 
-- Do you have an existing `.devcontainer/devcontainer.json`? If so, what's in it?
-- Are there local services started via Docker Compose? (e.g. local database, Redis)
-- What ports do your dev servers use? (e.g. `3000`, `8080`)
-- Are there `.env.local` or `.env` files that need to be copied into worktrees? List the glob patterns (these go into `.worktreeinclude` — e.g. `.env.local`, `apps/*/.env.local`, `config/local.json`).
-- What is the first-time setup sequence? (e.g. `pnpm install` → `docker compose up` → `pnpm dev`)
+### Q6 — CI/CD
 
-### 6 — CI/CD
+- CI workflows? What do they run?
+- Test framework(s)?
+- Deploy automation on merge?
+- CI secret names?
 
-- Do you have CI workflows already? What do they run? (lint, types, tests, build)
-- What test framework(s)? (e.g. Vitest, Jest, Playwright, pytest)
-- Any deploy automation on merge? (e.g. Vercel auto-deploy, GitHub Actions deploy script)
-- Are there secrets that CI needs? (don't share values — just the names, e.g. `DATABASE_URL`, `DEPLOY_TOKEN`)
+### Q7 — Team
 
-### 7 — Team
+- Who's on the team?
+- Solo project?
+- External AI tools?
 
-- Who's on the team? (names and roles — used for PR approval rules, CODEOWNERS, etc.)
-- Is this currently a solo project?
-- Any external collaborators (Lovable, Cursor, other AI tools)?
+### Q8 — Existing docs
 
-### 8 — Existing docs
+- Existing docs to preserve?
+- Project-specific conventions?
 
-- Are there any existing docs, READMEs, or architecture notes to preserve or migrate?
-- Any project-specific conventions not covered above? (naming, folder structure rules, etc.)
+---
+
+## Stack → feature matrix
+
+| Feature | all | bank-linear | beads-linear | beads-memory | beads |
+|---|---|---|---|---|---|
+| `memory-bank/*.md` created | ✅ | ✅ | ❌ | ✅ | ❌ |
+| `bd init` + `bd setup claude` | ✅ | ❌ | ✅ | ✅ | ✅ |
+| Linear questions (Q2) | ✅ | ✅ | ✅ | ❌ | ❌ |
+| Linear sections in docs | ✅ | ✅ | ✅ | ❌ | ❌ |
+| Beads sections in docs | ✅ | ❌ | ✅ | ✅ | ✅ |
+| Beads/bv targets in Makefile | ✅ | ❌ | ✅ | ✅ | ✅ |
 
 ---
 
@@ -83,66 +109,76 @@ All environments use **devcontainers running VS Code with Docker-in-Docker**.
 
 Claude Code: once all answers are gathered, perform these steps in order:
 
-1. **Find-and-replace all `<PLACEHOLDER>` tokens** across every template doc using the answers above. The mapping:
+### Step 1 — Replace placeholders
 
-   | Placeholder | Source |
-   |---|---|
-   | `<PROJECT_NAME>` | Q1 — project name |
-   | `<PROJECT_DESCRIPTION>` | Q1 — one-line description |
-   | `<REPO_PATH>` | Q1 — GitHub repo path (e.g. `org/repo`) |
-   | `<APP_ROOT>` | Q1 — monorepo app directory |
-   | `<LINEAR_WORKSPACE>` | Q2 — workspace slug |
-   | `<PREFIX>` | Q2 — ticket prefix |
-   | `<BASE_BRANCH>` | Q3 — base branch for feature work |
-   | `<PROD_BRANCH>` | Q3 — production branch |
-   | `<APPROVALS_REQUIRED>` | Q3 — number of approvals for prod merge |
-   | `<PACKAGE_MANAGER>` | Q4 — package manager |
-   | `<DATABASE>` | Q4 — database |
-   | `<DEPLOY_PLATFORM>` | Q4 — hosting platform |
-   | `<DEV_PORT>` | Q5 — default dev server port |
-   | `<ENV_FILES>` | Q5 — list of env files to copy into worktrees |
-   | `<INSTALL_CMD>` | Q5 — install command (e.g. `pnpm install`) |
-   | `<DEV_CMD>` | Q5 — dev server command (e.g. `pnpm dev`) |
+Replace all `<PLACEHOLDER>` tokens across every template doc:
 
-2. **Fill in project-specific sections** that can't be simple replacements (CI steps, env var tables, secret inventories) based on the answers.
+| Placeholder | Source |
+|---|---|
+| `<PROJECT_NAME>` | Q1 |
+| `<PROJECT_DESCRIPTION>` | Q1 |
+| `<REPO_PATH>` | Q1 |
+| `<APP_ROOT>` | Q1 |
+| `<STACK>` | Q0 |
+| `<LINEAR_WORKSPACE>` | Q2 |
+| `<PREFIX>` | Q2 (or Q3 if no Linear) |
+| `<BASE_BRANCH>` | Q3 |
+| `<PROD_BRANCH>` | Q3 |
+| `<APPROVALS_REQUIRED>` | Q3 |
+| `<PACKAGE_MANAGER>` | Q4 |
+| `<DATABASE>` | Q4 |
+| `<DEPLOY_PLATFORM>` | Q4 |
+| `<DEV_PORT>` | Q5 |
+| `<INSTALL_CMD>` | Q5 |
+| `<DEV_CMD>` | Q5 |
 
-3. **Initialize the memory bank.** Create the following structure using the bootstrap answers:
+### Step 2 — Remove inapplicable sections
 
-   ```
-   memory-bank/
-   ├── projectbrief.md        ← project name, description, goals, target users
-   ├── productContext.md       ← what the product does, problems it solves, UX goals
-   ├── techContext.md          ← stack, architecture, key packages, infra decisions
-   ├── systemPatterns.md       ← coding conventions, folder structure, design patterns
-   ├── activeContext.md        ← current focus, recent changes, next steps
-   └── progress.md            ← what works, what doesn't, known issues
-   ```
+Template files use `<!-- STACK:x,y,z -->` / `<!-- /STACK -->` markers. For the chosen stack: keep matching sections, delete non-matching ones, strip all markers.
 
-   `.claude/rules/memory-bank.md` already exists and tells Claude Code to read these files at session start — no need to create it.
+### Step 3 — Initialize memory bank (if stack includes it)
 
-   Populate each file with what's known from the bootstrap answers. Mark sections that need more detail with `<!-- TODO: fill in after first sprint -->`. The memory bank doesn't need to be perfect — it just needs to exist so the first real session has something to read.
+For stacks `all`, `bank-linear`, `beads-memory` — populate `memory-bank/*.md` files from bootstrap answers. `.claude/rules/memory-bank.md` already exists.
 
-   Also ensure `.devcontainer/SCRATCHPAD.md` exists (the template is already provided) and is listed in `.gitignore` — it's a personal capture file, not project state.
+### Step 4 — Initialize Beads (if stack includes it)
 
-4. **Hydrate the worktree script and `.worktreeinclude`.** In `scripts/worktree-new.sh`, replace:
-   - `TICKET_PREFIX="<PREFIX>"` with the actual ticket prefix (lowercase).
-   - `BASE_BRANCH="<BASE_BRANCH>"` with the actual base branch.
-   - `<INSTALL_CMD>` and `<DEV_CMD>` / `<DEV_PORT>` in the help text at the bottom.
+For stacks `all`, `beads-linear`, `beads-memory`, `beads`:
 
-   In `.worktreeinclude`, replace the default patterns with the actual glob patterns from Q5 (e.g. `apps/*/.env.local`, `.env`, `config/local.json`). Make sure `chmod +x scripts/worktree-new.sh scripts/claude-audit.sh`.
+```bash
+bd init --quiet
+bd setup claude
+```
 
-5. **Update the Makefile** — wire `worktree-new`, `worktree-list`, `worktree-prune`, `install`, `dev`, `up`, `claude-audit`, and any other targets to match the actual commands. Remove commented-out placeholder targets that don't apply (e.g. `db-*` if there's no database yet).
+### Step 5 — Hydrate scripts
 
-6. **Update README.md** with project name, description, setup instructions, and architecture overview.
+In `scripts/worktree-new.sh`:
+- `TICKET_PREFIX="<PREFIX>"` → actual prefix
+- `BASE_BRANCH="<BASE_BRANCH>"` → actual base branch
+- `<INSTALL_CMD>`, `<DEV_CMD>`, `<DEV_PORT>` in help text
 
-7. **Review all files** for any remaining `<PLACEHOLDER>` or `TBD` markers. List them for the user.
+In `.worktreeinclude`: set actual glob patterns from Q5.
 
-8. **Delete this file** (`BOOTSTRAP.md`).
+`chmod +x scripts/*.sh`
 
-9. **Commit everything:**
-   ```
-   chore(bootstrap): hydrate project docs and initialize memory bank
-   ```
+### Step 6 — Update Makefile
+
+Wire all targets to actual commands. Remove beads/bv targets if the stack doesn't include them. Remove commented-out placeholders that don't apply.
+
+### Step 7 — Write README.md
+
+Replace the template README with a project-specific one: name, description, setup instructions, architecture overview.
+
+### Step 8 — Review
+
+List any remaining `<PLACEHOLDER>`, `TBD`, or `<!-- STACK:... -->` markers.
+
+### Step 9 — Delete this file and commit
+
+```bash
+rm BOOTSTRAP.md
+git add -A
+git commit -m "chore(bootstrap): hydrate project docs — stack: <STACK>"
+```
 
 ---
 
@@ -150,18 +186,20 @@ Claude Code: once all answers are gathered, perform these steps in order:
 
 After bootstrap, the repo should have:
 
-| File | Purpose |
-|---|---|
-| `CLAUDE.md` | Claude Code session instructions |
-| `CONTRIBUTING.md` | Branching, commits, PR process, CI, setup |
-| `DEPLOYMENT-ENV.md` | Environments, secrets, deploy pipeline |
-| `WORKTREES.md` | Parallel worktree workflow |
-| `README.md` | Project overview and quickstart |
-| `Makefile` | Day-to-day commands |
-| `scripts/worktree-new.sh` | Worktree creation helper |
-| `scripts/claude-audit.sh` | Claude Code permission settings auditor |
-| `.worktreeinclude` | Gitignored files to copy into new worktrees |
-| `memory-bank/` | Session memory (activeContext.md, progress.md, etc.) |
-| `.claude/rules/memory-bank.md` | Claude Code rule to load memory bank |
-| `.devcontainer/SCRATCHPAD.md` | Personal capture file for ideas, TODOs, and discussion points (gitignored) |
-| `.claude/commands/checkpoint.md` | Claude Code slash command — save session state before devcontainer refresh |
+| File | Purpose | All stacks? |
+|---|---|---|
+| `.devcontainer/postinstall.sh` | System tool installs (devcontainer lifecycle) | ✅ |
+| `.devcontainer/SCRATCHPAD.md` | Personal capture file (gitignored) | ✅ |
+| `CLAUDE.md` | Claude Code session instructions | ✅ |
+| `CONTRIBUTING.md` | Branching, commits, PR process, CI, setup | ✅ |
+| `DEPLOYMENT-ENV.md` | Environments, secrets, deploy pipeline | ✅ |
+| `WORKTREES.md` | Parallel worktree workflow | ✅ |
+| `README.md` | Project overview and quickstart | ✅ |
+| `Makefile` | Day-to-day commands | ✅ |
+| `scripts/worktree-new.sh` | Worktree creation helper | ✅ |
+| `scripts/claude-audit.sh` | Claude Code permission auditor | ✅ |
+| `.worktreeinclude` | Gitignored files to copy into worktrees | ✅ |
+| `.claude/commands/checkpoint.md` | Save session state slash command | ✅ |
+| `.claude/rules/memory-bank.md` | Rule to load memory bank | stacks with memory-bank |
+| `memory-bank/` | Session memory files | stacks with memory-bank |
+| `.beads/` | Beads database | stacks with beads |
