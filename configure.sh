@@ -18,6 +18,9 @@ ok()    { echo -e "${GREEN}✓${NC} $1"; }
 warn()  { echo -e "${YELLOW}⚠${NC} $1"; }
 ask()   { echo -en "${BOLD}$1${NC} "; }
 
+# Portable sed -i (macOS BSD sed requires -i ''"'', GNU sed does not)
+sedi() { if sed --version 2>/dev/null | grep -q GNU; then sed -i "$@"; else sed -i '' "$@"; fi; }
+
 REPO_ROOT="$(cd "$(dirname "$0")" && pwd)"
 cd "$REPO_ROOT"
 
@@ -237,13 +240,13 @@ FILES_TO_PROCESS=(
 for f in "${FILES_TO_PROCESS[@]}"; do
   fp="$REPO_ROOT/$f"
   [[ ! -f "$fp" ]] && continue
-  sed -i "s|<PROJECT_NAME>|${PROJECT_NAME}|g" "$fp"
-  sed -i "s|<STACK>|${STACK}|g" "$fp"
-  sed -i "s|<PREFIX>|${PREFIX}|g" "$fp"
-  sed -i "s|<BASE_BRANCH>|${BASE_BRANCH}|g" "$fp"
-  sed -i "s|<PROD_BRANCH>|${PROD_BRANCH}|g" "$fp"
-  sed -i "s|<APPROVALS_REQUIRED>|${APPROVALS}|g" "$fp"
-  [[ -n "$REPO_PATH" ]] && sed -i "s|<REPO_PATH>|${REPO_PATH}|g" "$fp"
+  sedi "s|<PROJECT_NAME>|${PROJECT_NAME}|g" "$fp"
+  sedi "s|<STACK>|${STACK}|g" "$fp"
+  sedi "s|<PREFIX>|${PREFIX}|g" "$fp"
+  sedi "s|<BASE_BRANCH>|${BASE_BRANCH}|g" "$fp"
+  sedi "s|<PROD_BRANCH>|${PROD_BRANCH}|g" "$fp"
+  sedi "s|<APPROVALS_REQUIRED>|${APPROVALS}|g" "$fp"
+  [[ -n "$REPO_PATH" ]] && sedi "s|<REPO_PATH>|${REPO_PATH}|g" "$fp"
 done
 ok "Placeholders replaced"
 
