@@ -57,7 +57,10 @@ command -v uv &>/dev/null || { curl -LsSf https://astral.sh/uv/install.sh | sh; 
 if ! command -v git-cz &>/dev/null; then
   echo "→ Installing commitizen-go..."
   git clone https://github.com/lintingzhen/commitizen-go.git /tmp/commitizen-go
-  cd /tmp/commitizen-go && make && sudo make install && cd - && rm -rf /tmp/commitizen-go
+  # Build as the current user (who has Go on PATH), then copy the binary.
+  # `sudo make install` would re-run the build as root, which lacks Go.
+  (cd /tmp/commitizen-go && make && sudo cp commitizen-go /usr/local/bin/git-cz)
+  rm -rf /tmp/commitizen-go
 fi
 
 echo ""
