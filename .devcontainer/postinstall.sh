@@ -107,31 +107,6 @@ echo "✓ Claude Code global settings written"
 
 echo ""
 
-echo ""
-echo "═══ Symlinks ═══"
-
-WORKSPACE_DIR="/workspaces"
-# Find the workspace directory (the repo mount)
-if [[ -d "$WORKSPACE_DIR" ]]; then
-  REPO_DIR=$(find "$WORKSPACE_DIR" -maxdepth 1 -mindepth 1 -type d | head -1)
-else
-  REPO_DIR="$(pwd)"
-fi
-
-if [[ -d "$REPO_DIR/.agents/skills" ]]; then
-  # .agents/skills → .claude/skills + .kilo/skills
-  mkdir -p "$REPO_DIR/.claude/skills" "$REPO_DIR/.kilo/skills"
-  ln -s ../../.agents/skills "$REPO_DIR/.claude/skills" 2>/dev/null && echo "  ✓ .claude/skills → .agents/skills"
-  ln -s ../../.agents/skills "$REPO_DIR/.kilo/skills" 2>/dev/null && echo "  ✓ .kilo/skills → .agents/skills"
-
-  # .mcp.json → .claude/mcp.json
-  if [[ -f "$REPO_DIR/.claude/mcp.json" ]]; then
-    ln -sfn .claude/mcp.json "$REPO_DIR/.mcp.json" 2>/dev/null && echo "  ✓ .mcp.json → .claude/mcp.json"
-  fi
-else
-  echo "  (skipping symlinks — .agents/skills not found)"
-fi
-
 
 echo "═══ Verify ═══"
 for cmd in gh jq claude bd bv uv git go node pnpm git-cz; do

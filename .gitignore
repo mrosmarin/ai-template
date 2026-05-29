@@ -70,3 +70,8 @@ Thumbs.db
 
 .devcontainer/SCRATCHPAD.md
 
+
+# Mount targets (created by devcontainer bind mounts, not tracked)
+.mcp.json
+.claude/skills/
+.kilo/skills/

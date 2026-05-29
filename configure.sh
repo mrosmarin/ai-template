@@ -109,7 +109,10 @@ cat > .devcontainer/devcontainer.json << DCEOF
   "mounts": [
     "source=\${localWorkspaceFolder}/.devcontainer/.bashrc,target=/home/vscode/.bashrc,type=bind,consistency=cached",
     "source=\${localWorkspaceFolder}/.devcontainer/.zshrc,target=/home/vscode/.zshrc,type=bind,consistency=cached",
-    "source=${PROJECT_NAME}-claude-code-config,target=/home/node/.claude,type=volume"
+    "source=${PROJECT_NAME}-claude-code-config,target=/home/node/.claude,type=volume",
+    "source=\${localWorkspaceFolder}/.agents/skills,target=/workspaces/\${localWorkspaceFolderBasename}/.claude/skills,type=bind,consistency=cached",
+    "source=\${localWorkspaceFolder}/.agents/skills,target=/workspaces/\${localWorkspaceFolderBasename}/.kilo/skills,type=bind,consistency=cached",
+    "source=\${localWorkspaceFolder}/.claude/mcp.json,target=/workspaces/\${localWorkspaceFolderBasename}/.mcp.json,type=bind,consistency=cached"
   ],
 
   "features": {
@@ -291,15 +294,6 @@ for f in "${FILES_TO_PROCESS[@]}"; do
   [[ -n "$REPO_PATH" ]] && sedi "s|<REPO_PATH>|${REPO_PATH}|g" "$fp"
 done
 ok "Placeholders replaced"
-
-# ══════════════════════════════════════════════════════════════════════
-# STEP 5 — Skill symlinks
-# ══════════════════════════════════════════════════════════════════════
-info "Setting up skill symlinks..."
-mkdir -p .claude/skills .kilo/skills
-ln -sfn ../../.agents/skills/checkpoint .claude/skills/checkpoint
-ln -sfn ../../.agents/skills/checkpoint .kilo/skills/checkpoint
-ok ".agents/skills/checkpoint/ → .claude/skills + .kilo/skills"
 
 # ══════════════════════════════════════════════════════════════════════
 # STEP 6 — Memory bank
