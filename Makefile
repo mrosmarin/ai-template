@@ -179,6 +179,22 @@ bv-export: ## Export interactive HTML graph for stakeholders
 	@echo "→ Exported to report-$$(date +%Y%m%d).html"
 # <!-- /STACK -->
 
+# ─── MCP servers ─────────────────────────────────────────────────────
+
+.PHONY: mcp-add
+mcp-add: ## Add an MCP server preset: make mcp-add NAME=linear
+	@if [[ -z "$(NAME)" ]]; then \
+		echo "Usage: make mcp-add NAME=<preset>"; \
+		echo "Available: linear vercel supabase next-devtools shadcn"; \
+		exit 2; \
+	fi
+	./scripts/mcp-add.sh $(NAME)
+
+.PHONY: mcp-list
+mcp-list: ## List available MCP presets
+	@./scripts/mcp-add.sh --list
+
+
 # ─── SSH ──────────────────────────────────────────────────────────────
 
 .PHONY: ssh-setup

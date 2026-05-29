@@ -7,10 +7,6 @@
         "Authorization": "Bearer ${GITHUB_PERSONAL_ACCESS_TOKEN}"
       }
     },
-    "linear": {
-      "type": "http",
-      "url": "https://mcp.linear.app/mcp"
-    },
     "playwright": {
       "type": "stdio",
       "command": "npx",
@@ -18,30 +14,12 @@
         "@playwright/mcp@latest"
       ]
     },
-    "vercel": {
-      "type": "http",
-      "url": "https://mcp.vercel.com"
-    },
     "context7": {
       "type": "http",
       "url": "https://mcp.context7.com/mcp",
       "headers": {
         "CONTEXT7_API_KEY": "${CONTEXT7_TOKEN}"
       }
-    },
-    "next-devtools": {
-      "command": "npx",
-      "args": [
-        "-y",
-        "next-devtools-mcp@latest"
-      ]
-    },
-    "shadcn": {
-      "command": "npx",
-      "args": [
-        "shadcn@4.7.0",
-        "mcp"
-      ]
     }
   }
 }

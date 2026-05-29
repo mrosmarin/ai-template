@@ -193,6 +193,48 @@ chmod +x .devcontainer/ssh-setup.sh
 ok "ssh-setup.sh"
 
 # ══════════════════════════════════════════════════════════════════════
+# STEP 2b — Create .devcontainer/.env with environment secrets
+# ══════════════════════════════════════════════════════════════════════
+info "Setting up .devcontainer/.env..."
+
+ENV_FILE=".devcontainer/.env"
+
+if [[ -f "$ENV_FILE" ]]; then
+  warn ".devcontainer/.env already exists — skipping"
+else
+  echo ""
+  echo -e "${BOLD}Add environment variables for the devcontainer.${NC}"
+  echo -e "${DIM}These are loaded as shell env vars inside the container.${NC}"
+  echo -e "${DIM}Common: GITHUB_PERSONAL_ACCESS_TOKEN, CONTEXT7_TOKEN, API keys${NC}"
+  echo -e "${DIM}Enter key=value pairs, one per line. Empty line to finish.${NC}"
+  echo ""
+
+  touch "$ENV_FILE"
+
+  while true; do
+    ask "  key=value (or empty to finish):"
+    read -r KV
+    [[ -z "$KV" ]] && break
+    if [[ "$KV" == *"="* ]]; then
+      echo "$KV" >> "$ENV_FILE"
+      KEY="${KV%%=*}"
+      ok "  Added $KEY"
+    else
+      warn "  Skipped — must be key=value format"
+    fi
+  done
+
+  if [[ -s "$ENV_FILE" ]]; then
+    ok ".devcontainer/.env created ($(wc -l < "$ENV_FILE" | tr -d ' ') vars)"
+  else
+    echo "# Add environment variables here (key=value, one per line)" > "$ENV_FILE"
+    echo "# Example: GITHUB_PERSONAL_ACCESS_TOKEN=ghp_xxxx" >> "$ENV_FILE"
+    ok ".devcontainer/.env created (empty template)"
+  fi
+fi
+
+
+# ══════════════════════════════════════════════════════════════════════
 # STEP 3 — Strip stack-conditional sections
 # ══════════════════════════════════════════════════════════════════════
 info "Stripping stack sections for: ${STACK}..."

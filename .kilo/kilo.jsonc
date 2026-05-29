@@ -9,16 +9,6 @@
         "@playwright/mcp@0.0.38"
       ]
     },
-    "linear": {
-      "type": "local",
-      "command": [
-        "npx",
-        "-y",
-        "mcp-remote",
-        "https://mcp.linear.app/mcp"
-      ],
-      "enabled": true
-    },
     "github": {
       "type": "local",
       "command": [
@@ -31,16 +21,6 @@
       },
       "enabled": true
     },
-    "vercel": {
-      "type": "local",
-      "command": [
-        "npx",
-        "-y",
-        "mcp-remote",
-        "https://mcp.vercel.com"
-      ],
-      "enabled": true
-    },
     "context7": {
       "type": "remote",
       "url": "https://mcp.context7.com/mcp",
@@ -48,27 +28,6 @@
         "Authorization": "Bearer ${CONTEXT7_TOKEN}"
       },
       "enabled": true
-    },
-    "supabase": {
-      "type": "remote",
-      "url": "http://127.0.0.1:54321/mcp"
-    },
-    "next-devtools": {
-      "type": "local",
-      "command": [
-        "npx",
-        "-y",
-        "next-devtools-mcp@latest"
-      ]
-    },
-    "shadcn": {
-      "type": "local",
-      "command": [
-        "npx",
-        "-y",
-        "shadcn@4.7.0",
-        "mcp"
-      ]
     }
   }
 }
