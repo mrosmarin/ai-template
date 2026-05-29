@@ -11,13 +11,10 @@
     "source=${localWorkspaceFolder}/.devcontainer/.bashrc,target=/home/vscode/.bashrc,type=bind,consistency=cached",
     "source=${localWorkspaceFolder}/.devcontainer/.zshrc,target=/home/vscode/.zshrc,type=bind,consistency=cached",
     // Persistent Claude Code config across rebuilds
-    "source=ai-template-claude-code-config,target=/home/node/.claude,type=volume",
-    // Shared skills: .agents/skills → .claude/skills + .kilo/skills
-    "source=${localWorkspaceFolder}/.agents/skills,target=/workspaces/${localWorkspaceFolderBasename}/.claude/skills,type=bind,consistency=cached",
-    "source=${localWorkspaceFolder}/.agents/skills,target=/workspaces/${localWorkspaceFolderBasename}/.kilo/skills,type=bind,consistency=cached",
-    // Single MCP config: .claude/mcp.json → .mcp.json at workspace root
-    "source=${localWorkspaceFolder}/.claude/mcp.json,target=/workspaces/${localWorkspaceFolderBasename}/.mcp.json,type=bind,consistency=cached"
+    "source=ai-template-claude-code-config,target=/home/node/.claude,type=volume"
     // NOTE: No host SSH mount. Keys generated in-container: make ssh-setup
+    // Skills (.agents/skills) and .mcp.json are git symlinks, not mounts —
+    // Docker can't bind-mount within the workspace on macOS/virtiofs.
   ],
 
   "features": {

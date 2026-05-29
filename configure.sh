@@ -109,10 +109,7 @@ cat > .devcontainer/devcontainer.json << DCEOF
   "mounts": [
     "source=\${localWorkspaceFolder}/.devcontainer/.bashrc,target=/home/vscode/.bashrc,type=bind,consistency=cached",
     "source=\${localWorkspaceFolder}/.devcontainer/.zshrc,target=/home/vscode/.zshrc,type=bind,consistency=cached",
-    "source=${PROJECT_NAME}-claude-code-config,target=/home/node/.claude,type=volume",
-    "source=\${localWorkspaceFolder}/.agents/skills,target=/workspaces/\${localWorkspaceFolderBasename}/.claude/skills,type=bind,consistency=cached",
-    "source=\${localWorkspaceFolder}/.agents/skills,target=/workspaces/\${localWorkspaceFolderBasename}/.kilo/skills,type=bind,consistency=cached",
-    "source=\${localWorkspaceFolder}/.claude/mcp.json,target=/workspaces/\${localWorkspaceFolderBasename}/.mcp.json,type=bind,consistency=cached"
+    "source=${PROJECT_NAME}-claude-code-config,target=/home/node/.claude,type=volume"
   ],
 
   "features": {
