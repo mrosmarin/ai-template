@@ -60,9 +60,9 @@ make ssh-setup
 
 ```
 your-project/
-├── .agents/skills/              ← shared agent skills (mounted into .claude + .kilo)
+├── .agents/skills/              ← shared agent skills (symlinked from .claude + .kilo)
 ├── .claude/
-│   ├── mcp.json                 ← MCP server config (mounted to .mcp.json at root)
+│   ├── mcp.json                 ← MCP server config (symlinked as .mcp.json at root)
 │   ├── rules/memory-bank.md     ← session rule: read memory bank at start
 │   └── settings.json            ← project-level Claude Code permissions
 ├── .kilo/
@@ -90,9 +90,11 @@ your-project/
 └── Makefile                     ← day-to-day commands
 ```
 
-**Devcontainer bind mounts** keep configs in sync without symlinks:
-- `.agents/skills/` is mounted at `.claude/skills/` and `.kilo/skills/` — both agents see the same skills
-- `.claude/mcp.json` is mounted at `.mcp.json` — single source of truth for MCP config
+**Git symlinks** keep configs in sync across both agents:
+- `.claude/skills/` and `.kilo/skills/` → `.agents/skills/` — both agents share one set of skills
+- `.mcp.json` → `.claude/mcp.json` — single source of truth for MCP config
+
+These are committed as symlinks (Docker can't bind-mount within the workspace on macOS), so they work on clone with no setup. On Windows, enable `git config core.symlinks true`.
 
 ## Daily commands
 
