@@ -22,7 +22,28 @@ tar -xzf nats.tar.gz && cd natscli-0.3.0
 go build -o /usr/local/go/bin/nats ./nats
 cd .. && rm -rf natscli-0.3.0 nats.tar.gz
 
-docker network create -d=bridge --subnet=172.18.0.0/24 kind || true
+# Create a "kind" Docker network with a /24 subnet.
+# Skip if the network already exists. If the preferred subnet (172.18.0.0/24)
+# is already claimed by another network, find the first free 172.18.X.0/24.
+if docker network inspect kind &>/dev/null; then
+  echo "→ Docker network 'kind' already exists — skipping"
+else
+  USED_SUBNETS=$(docker network ls -q 2>/dev/null | xargs -I{} docker network inspect --format '{{range .IPAM.Config}}{{.Subnet}}{{end}}' {} 2>/dev/null || true)
+  SUBNET=""
+  for i in $(seq 0 254); do
+    CANDIDATE="172.18.${i}.0/24"
+    if ! echo "$USED_SUBNETS" | grep -qF "$CANDIDATE"; then
+      SUBNET="$CANDIDATE"
+      break
+    fi
+  done
+  if [[ -n "$SUBNET" ]]; then
+    docker network create -d=bridge --subnet="$SUBNET" kind
+    echo "→ Created Docker network 'kind' with subnet $SUBNET"
+  else
+    echo "⚠ Could not find a free 172.18.X.0/24 subnet — skipping kind network"
+  fi
+fi
 
 go install github.com/go-delve/delve/cmd/dlv@latest
 
@@ -195,6 +216,51 @@ echo "✓ Claude Code global settings written"
 
 echo ""
 
+
+echo ""
+echo "═══ Skill / MCP symlinks ═══"
+
+# These links are committed to git (mode 120000), but a project created
+# from an older template — or a Windows clone without core.symlinks — may
+# have them missing, dangling, or materialized as plain files. A dangling
+# .claude/skills link breaks Claude Code startup (bwrap can't bind it).
+# Repair them here so the container self-heals on (re)build.
+
+repair_link() {
+  # $1 = link path, $2 = relative target
+  local link="$1" target="$2"
+  local dir; dir="$(dirname "$link")"
+  # Resolve the target relative to the link's directory to test existence
+  if [[ -e "$dir/$target" ]]; then
+    # target exists — ensure link is a correct symlink (not a file/dir/dangling)
+    if [[ ! -L "$link" ]] || [[ "$(readlink "$link" 2>/dev/null)" != "$target" ]]; then
+      rm -rf "$link"
+      ln -s "$target" "$link"
+      echo "  ✓ repaired $link → $target"
+    else
+      echo "  ✓ $link"
+    fi
+  else
+    echo "  ⚠ $link target missing ($dir/$target) — skipped"
+  fi
+}
+
+# Run from the repo root (postCreateCommand runs there, but be explicit)
+if [[ -d .agents/skills ]]; then
+  mkdir -p .claude .kilo
+  repair_link ".claude/skills" "../.agents/skills"
+  repair_link ".kilo/skills"   "../.agents/skills"
+else
+  echo "  ⚠ .agents/skills/ not found — skipping skill links"
+  echo "    (this project may predate the shared-skills layout)"
+fi
+
+# .mcp.json → .claude/mcp.json (only if the source exists)
+if [[ -f .claude/mcp.json ]]; then
+  repair_link ".mcp.json" ".claude/mcp.json"
+else
+  echo "  ⚠ .claude/mcp.json not found — skipping .mcp.json link"
+fi
 
 echo "═══ Verify ═══"
 for cmd in gh jq claude bd bv uv git go node pnpm git-cz; do
