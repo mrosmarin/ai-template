@@ -195,6 +195,20 @@ mcp-list: ## List available MCP presets
 	@./scripts/mcp-add.sh --list
 
 
+# ─── Skills ──────────────────────────────────────────────────────────
+
+.PHONY: skills-sync
+skills-sync: ## Copy .agents/skills into .claude/skills and .kilo/skills
+	@if [[ -d .agents/skills ]]; then \
+		rm -rf .claude/skills .kilo/skills; \
+		mkdir -p .claude .kilo; \
+		cp -R .agents/skills .claude/skills; \
+		cp -R .agents/skills .kilo/skills; \
+		echo "✓ Synced .agents/skills → .claude/skills and .kilo/skills"; \
+	else \
+		echo "⚠ .agents/skills not found — nothing to sync"; \
+	fi
+
 # ─── SSH ──────────────────────────────────────────────────────────────
 
 .PHONY: ssh-setup

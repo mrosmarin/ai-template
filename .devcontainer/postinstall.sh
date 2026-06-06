@@ -218,46 +218,31 @@ echo ""
 
 
 echo ""
-echo "═══ Skill / MCP symlinks ═══"
+echo "═══ Agent skills + MCP link ═══"
 
-# These links are committed to git (mode 120000), but a project created
-# from an older template — or a Windows clone without core.symlinks — may
-# have them missing, dangling, or materialized as plain files. A dangling
-# .claude/skills link breaks Claude Code startup (bwrap can't bind it).
-# Repair them here so the container self-heals on (re)build.
-
-repair_link() {
-  # $1 = link path, $2 = relative target
-  local link="$1" target="$2"
-  local dir; dir="$(dirname "$link")"
-  # Resolve the target relative to the link's directory to test existence
-  if [[ -e "$dir/$target" ]]; then
-    # target exists — ensure link is a correct symlink (not a file/dir/dangling)
-    if [[ ! -L "$link" ]] || [[ "$(readlink "$link" 2>/dev/null)" != "$target" ]]; then
-      rm -rf "$link"
-      ln -s "$target" "$link"
-      echo "  ✓ repaired $link → $target"
-    else
-      echo "  ✓ $link"
-    fi
-  else
-    echo "  ⚠ $link target missing ($dir/$target) — skipped"
-  fi
-}
-
-# Run from the repo root (postCreateCommand runs there, but be explicit)
-if [[ -d .agents/skills ]]; then
-  mkdir -p .claude .kilo
-  repair_link ".claude/skills" "../.agents/skills"
-  repair_link ".kilo/skills"   "../.agents/skills"
+# .agents/skills is the source of truth (committed). Copy it into the
+# tool-specific dirs (gitignored) so Claude Code and Kilo Code see the
+# skills. Copies can't dangle the way symlinks can. Re-sync any time
+# with: make skills-sync
+if [[ -d ./.agents/skills ]]; then
+  rm -rf ./.claude/skills ./.kilo/skills
+  mkdir -p ./.claude ./.kilo
+  cp -R ./.agents/skills ./.claude/skills
+  cp -R ./.agents/skills ./.kilo/skills
+  echo "  ✓ synced .agents/skills → .claude/skills and .kilo/skills"
 else
-  echo "  ⚠ .agents/skills/ not found — skipping skill links"
-  echo "    (this project may predate the shared-skills layout)"
+  echo "  ⚠ .agents/skills not found — skipping skill sync"
 fi
 
-# .mcp.json → .claude/mcp.json (only if the source exists)
-if [[ -f .claude/mcp.json ]]; then
-  repair_link ".mcp.json" ".claude/mcp.json"
+# .mcp.json stays a symlink → .claude/mcp.json (single file, repair if needed)
+if [[ -f ./.claude/mcp.json ]]; then
+  if [[ ! -L ./.mcp.json ]] || [[ "$(readlink ./.mcp.json 2>/dev/null)" != ".claude/mcp.json" ]]; then
+    rm -rf ./.mcp.json
+    ln -s .claude/mcp.json ./.mcp.json
+    echo "  ✓ repaired .mcp.json → .claude/mcp.json"
+  else
+    echo "  ✓ .mcp.json"
+  fi
 else
   echo "  ⚠ .claude/mcp.json not found — skipping .mcp.json link"
 fi
