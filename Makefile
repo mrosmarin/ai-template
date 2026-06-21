@@ -230,12 +230,8 @@ claude-audit-verbose: ## Audit + list every command Claude has run
 	bash scripts/claude-audit.sh --verbose
 
 .PHONY: claude-fix
-claude-fix: ## Audit, then interactively add prompt-driving commands to allow list (live + postinstall)
+claude-fix: ## Audit, then switch Claude permissions to Bash(*) + deny list (stops prompts; live + postinstall)
 	bash scripts/claude-audit.sh --fix
-
-.PHONY: claude-fix-all
-claude-fix-all: ## Like claude-fix but also adds common coverage-gap commands
-	bash scripts/claude-audit.sh --fix-all
 
 .PHONY: claude-fix-yes
 claude-fix-yes: ## Same as claude-fix but applies without prompting
